@@ -47,6 +47,14 @@ def issue_refund_ticket(user:str,refund_amount:int)-> str:
     this tool will send the ticket to the team to return the refund
     """
     logging.info(f"using issue_refund_ticket tool for user:{user}")
+    if PurchaseItem.name not in users_data[user]:
+        return {"status": "error", "message": "Item was not purchased"}
+
+    days_old = (date.today() - users_data[user][items]).days
+
+    if days_old < 0 or days_old > 30:
+        return {"status": "error", "message": "Item is not eligible for refund"}
+    
     return f"the refund ticket has be succesfully issued with the amount of {refund_amount}"
 
 @tool
@@ -55,7 +63,34 @@ def get_today_time(user:str)->str:
     this tool will return today's date
     """
     logging.info(f"using get_today_date")
-    return date.today()
+    return date.today().isoformat()
 
+@tool
+def check_refund_eligibility(user: str, item_name: str) -> str:
+    """Check whether a purchased item is eligible for a refund."""
+
+    if user not in users_data:
+        return "No user was found."
+
+    purchase = users_data[user].get(item_name)
+
+    if purchase is None:
+        return f"{item_name} was not purchased by {user}."
+
+    try:
+        purchase_date = date.fromisoformat(purchase["date"])
+    except (KeyError, TypeError, ValueError):
+        return f"The purchase date for {item_name} is invalid."
+
+    today = date.today()
+    days_old = (today - purchase_date).days
+
+    if days_old < 0:
+        return f"{item_name} is not eligible because its purchase date is in the future."
+
+    if days_old > 30:
+        return f"{item_name} is not eligible because it was purchased {days_old} days ago."
+
+    return f"{item_name} is eligible for a refund. It was purchased {days_old} days ago."
 
 # print(get_user_purchase_history.invoke("user123"))
