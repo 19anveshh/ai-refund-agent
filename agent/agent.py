@@ -11,6 +11,7 @@ from objects import Answer
 from prompts import agent_system_prompt
 from tools import (
     calculate_right_refund_amount,
+    check_refund_eligibility,
     get_today_time,
     get_user_purchase_history,
     issue_refund_ticket,
@@ -26,7 +27,8 @@ agent = create_agent(
         get_today_time,
         get_user_purchase_history,
         issue_refund_ticket,
-        issue_refund_ticket
+        check_refund_eligibility,
+        
     ],
     response_format=Answer,
     checkpointer=InMemorySaver(),

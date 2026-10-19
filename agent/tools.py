@@ -3,7 +3,8 @@ from data import users_data
 from dotenv import load_dotenv
 import logging
 from objects import PurchaseItem
-from datetime import date
+from datetime import date,datetime
+
 
 load_dotenv()
 
@@ -40,22 +41,47 @@ def calculate_right_refund_amount(user:str,items:list[PurchaseItem]) -> str:
         return f"the value of the refund is: {total_refund} "
     return {"status":"there is no username found"}
 
-
 @tool
-def issue_refund_ticket(user:str,refund_amount:int)-> str:
-    """
-    this tool will send the ticket to the team to return the refund
-    """
-    logging.info(f"using issue_refund_ticket tool for user:{user}")
-    if PurchaseItem.name not in users_data[user]:
-        return {"status": "error", "message": "Item was not purchased"}
+def issue_refund_ticket(
+    user: str,
+    refund_amount: int,
+    items: list[PurchaseItem],
+) -> dict:
+    """Validate eligible items and issue a refund ticket."""
 
-    days_old = (date.today() - users_data[user][items]).days
+    logging.info(f"Using issue_refund_ticket for user: {user}")
 
-    if days_old < 0 or days_old > 30:
-        return {"status": "error", "message": "Item is not eligible for refund"}
-    
-    return f"the refund ticket has be succesfully issued with the amount of {refund_amount}"
+    if user not in users_data:
+        return {"status": "error", "message": "User was not found"}
+
+    for item in items:
+        purchase = users_data[user].get(item.name)
+
+        if purchase is None:
+            return {
+                "status": "error",
+                "message": f"{item.name} was not purchased",
+            }
+
+        purchase_date = datetime.strptime(
+            purchase["date"], "%Y-%m-%d"
+        ).date()
+
+        days_old = (date.today() - purchase_date).days
+
+        if days_old < 0 or days_old > 30:
+            return {
+                "status": "error",
+                "message": f"{item.name} is not eligible for a refund",
+            }
+
+    return {
+        "status": "success",
+        "message": (
+            f"Refund ticket successfully issued for "
+            f"{refund_amount} for user {user}"
+        ),
+    }
 
 @tool
 def get_today_time(user:str)->str:
