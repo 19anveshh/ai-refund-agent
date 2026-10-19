@@ -26,6 +26,7 @@ agent = create_agent(
         get_today_time,
         get_user_purchase_history,
         issue_refund_ticket,
+        issue_refund_ticket
     ],
     response_format=Answer,
     checkpointer=InMemorySaver(),
